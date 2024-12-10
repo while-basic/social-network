@@ -3,13 +3,146 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import type { Post, Profile } from '../types/database';
-import { FaImage, FaMagic, FaHeart, FaComment, FaUserFriends, FaChartLine } from 'react-icons/fa';
+import { FaImage, FaMagic, FaHeart, FaComment, FaUserFriends, FaChartLine, FaTimes, FaCalendar } from 'react-icons/fa';
+
+interface ImageModalProps {
+  post: Post;
+  onClose: () => void;
+}
+
+function ImageModal({ post, onClose }: ImageModalProps) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    // Trigger animation after mount
+    requestAnimationFrame(() => {
+      setIsVisible(true);
+    });
+
+    // Add escape key listener
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, []);
+
+  const handleClose = () => {
+    setIsVisible(false);
+    // Wait for animation to complete before closing
+    setTimeout(onClose, 300);
+  };
+
+  return (
+    <div 
+      className={`fixed inset-0 bg-black flex items-center justify-center z-50 p-4 transition-opacity duration-300 ${
+        isVisible ? 'bg-opacity-75' : 'bg-opacity-0'
+      }`}
+      onClick={handleClose}
+    >
+      <div 
+        className={`bg-white rounded-lg overflow-hidden max-w-4xl w-full max-h-[90vh] flex flex-col transform transition-all duration-300 ${
+          isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+        }`}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="p-4 border-b flex items-center justify-between">
+          <div className="flex items-center gap-3 animate-fadeIn">
+            <img
+              src={post.profile?.avatar_url || `https://ui-avatars.com/api/?name=${post.profile?.username}`}
+              alt={post.profile?.username}
+              className="w-10 h-10 rounded-full"
+            />
+            <div>
+              <h3 className="font-semibold">{post.profile?.username}</h3>
+              <p className="text-sm text-gray-500">
+                {new Date(post.created_at).toLocaleDateString()}
+              </p>
+            </div>
+          </div>
+          <button 
+            onClick={handleClose}
+            className="text-gray-500 hover:text-gray-700 transition-colors duration-200 hover:rotate-90 transform"
+          >
+            <FaTimes size={24} />
+          </button>
+        </div>
+
+        {/* Image and Details */}
+        <div className="flex-1 overflow-auto flex flex-col md:flex-row">
+          {/* Image */}
+          <div className="md:flex-1 bg-black flex items-center justify-center">
+            <img
+              src={post.image_url}
+              alt={post.prompt}
+              className={`max-h-[60vh] md:max-h-[80vh] object-contain transition-all duration-500 ${
+                isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+              }`}
+            />
+          </div>
+
+          {/* Details */}
+          <div className={`w-full md:w-80 p-4 border-t md:border-t-0 md:border-l transition-transform duration-300 ${
+            isVisible ? 'translate-x-0' : 'translate-x-full'
+          }`}>
+            {/* Stats */}
+            <div className="flex items-center justify-around mb-4 p-3 bg-gray-50 rounded-lg transform transition-all duration-500">
+              <div className="text-center hover:scale-110 transition-transform">
+                <div className="flex items-center gap-1 text-red-500">
+                  <FaHeart className="animate-pulse" />
+                  <span className="font-semibold">{post.likes_count}</span>
+                </div>
+                <p className="text-sm text-gray-600">Likes</p>
+              </div>
+              <div className="text-center hover:scale-110 transition-transform">
+                <div className="flex items-center gap-1 text-blue-500">
+                  <FaComment />
+                  <span className="font-semibold">{post.comments_count}</span>
+                </div>
+                <p className="text-sm text-gray-600">Comments</p>
+              </div>
+              <div className="text-center hover:scale-110 transition-transform">
+                <div className="flex items-center gap-1 text-green-500">
+                  <FaCalendar />
+                  <span className="font-semibold">{new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                </div>
+                <p className="text-sm text-gray-600">Created</p>
+              </div>
+            </div>
+
+            {/* Caption */}
+            {post.caption && (
+              <div className="mb-4 transform transition-all duration-500 delay-100">
+                <h4 className="font-semibold text-sm text-gray-700 mb-1">Caption</h4>
+                <p className="text-gray-600">{post.caption}</p>
+              </div>
+            )}
+
+            {/* Prompt */}
+            <div className="transform transition-all duration-500 delay-200">
+              <h4 className="font-semibold text-sm text-gray-700 mb-1">Prompt</h4>
+              <p className="text-gray-600 text-sm italic">{post.prompt}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [stats, setStats] = useState({
     totalPosts: 0,
     totalLikes: 0,
@@ -177,7 +310,11 @@ export default function Home() {
         {posts.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {posts.map((post) => (
-              <div key={post.id} className="relative aspect-square rounded-lg overflow-hidden group">
+              <div 
+                key={post.id} 
+                className="relative aspect-square rounded-lg overflow-hidden group cursor-pointer"
+                onClick={() => setSelectedPost(post)}
+              >
                 <img
                   src={post.image_url}
                   alt={post.prompt}
@@ -214,6 +351,14 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {/* Image Modal */}
+      {selectedPost && (
+        <ImageModal 
+          post={selectedPost} 
+          onClose={() => setSelectedPost(null)} 
+        />
+      )}
     </div>
   );
 } 
