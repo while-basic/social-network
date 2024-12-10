@@ -7,12 +7,32 @@
   --background-color: #f3f4f6;
 }
 
+/* Reset default margins and ensure proper height */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
-  @apply bg-gray-50 text-gray-900 min-h-screen;
+  @apply bg-gray-50 text-gray-900;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+#root {
+  height: 100%;
+  overflow: hidden;
 }
 
 .container {
   @apply max-w-4xl mx-auto px-4;
+  width: 100%;
+}
+
+/* Ensure content areas are scrollable */
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
 }
 
 @keyframes fadeIn {

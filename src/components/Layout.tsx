@@ -33,12 +33,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   ];
 
   return (
-    <div className="min-h-screen pb-16">
-      <main className="container py-4">
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      <main className="flex-1 overflow-y-auto pb-16">
         {children}
       </main>
       
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-10">
         <div className="container flex justify-around py-2">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
