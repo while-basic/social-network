@@ -43,11 +43,10 @@ export function useImageGeneration() {
         model: "dall-e-3",
         prompt,
         n: 1,
-        response_format: 'b64_json',
-        size: options.size
+        size: options.size,
+        response_format: 'url'
       };
 
-      // DALL-E 3 doesn't support quality and style parameters
       console.log('Sending request to OpenAI:', requestBody);
 
       const response = await fetch('https://api.openai.com/v1/images/generations', {
@@ -70,13 +69,28 @@ export function useImageGeneration() {
       }
 
       const data = await response.json();
-      if (!data.data?.[0]?.b64_json) {
+      console.log('OpenAI API response:', data);
+
+      if (!data.data?.[0]?.url) {
         console.error('Unexpected API response:', data);
         throw new Error('Invalid response format from image generation API');
       }
 
-      console.log('Image generated successfully');
-      return `data:image/png;base64,${data.data[0].b64_json}`;
+      // Fetch the image and convert to base64
+      const imageResponse = await fetch(data.data[0].url);
+      if (!imageResponse.ok) {
+        throw new Error('Failed to fetch generated image');
+      }
+
+      const blob = await imageResponse.blob();
+      const base64data = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+
+      console.log('Image generated and converted successfully');
+      return base64data;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate image';
       console.error('Generation error:', {
