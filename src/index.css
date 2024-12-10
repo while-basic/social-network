@@ -12,6 +12,8 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
+  width: 100%;
+  position: fixed;
   overflow: hidden;
 }
 
@@ -22,7 +24,7 @@ body {
 
 #root {
   height: 100%;
-  overflow: hidden;
+  width: 100%;
 }
 
 .container {
@@ -33,6 +35,18 @@ body {
 /* Ensure content areas are scrollable */
 .overflow-y-auto {
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.overflow-y-auto::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.overflow-y-auto {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
 
 @keyframes fadeIn {
