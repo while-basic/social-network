@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useImageGeneration, type GenerationOptions } from '../hooks/useImageGeneration';
 import { FaImage, FaMagic, FaCog, FaInfoCircle, FaLightbulb, FaRedo } from 'react-icons/fa';
-import StorageDebug from '../components/StorageDebug';
 import type { Post } from '../types/database';
 
 export default function Create() {
@@ -72,7 +71,6 @@ export default function Create() {
 
   return (
     <div className="container mx-auto p-4">
-      <StorageDebug />
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Column - Controls */}
