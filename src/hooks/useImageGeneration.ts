@@ -38,27 +38,34 @@ export function useImageGeneration() {
     try {
       console.log('Generating image with options:', { prompt, ...options });
 
-      // Generate image using DALL-E 3
+      // DALL-E 3 specific parameters
+      const requestBody = {
+        model: "dall-e-3",
+        prompt,
+        n: 1,
+        response_format: 'b64_json',
+        size: options.size
+      };
+
+      // DALL-E 3 doesn't support quality and style parameters
+      console.log('Sending request to OpenAI:', requestBody);
+
       const response = await fetch('https://api.openai.com/v1/images/generations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`
         },
-        body: JSON.stringify({
-          model: "dall-e-3",
-          prompt,
-          n: 1,
-          response_format: 'b64_json',
-          quality: options.quality,
-          style: options.style,
-          size: options.size
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('OpenAI API error:', errorData);
+        console.error('OpenAI API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
         throw new Error(errorData.error?.message || `API error: ${response.status} ${response.statusText}`);
       }
 
@@ -72,7 +79,11 @@ export function useImageGeneration() {
       return `data:image/png;base64,${data.data[0].b64_json}`;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate image';
-      console.error('Generation error:', err);
+      console.error('Generation error:', {
+        error: err,
+        message: errorMessage,
+        prompt
+      });
       setError(errorMessage);
       return null;
     } finally {
