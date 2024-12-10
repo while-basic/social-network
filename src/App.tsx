@@ -2,11 +2,10 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Layout from './components/Layout';
 import Auth from './components/Auth';
 import Home from './pages/Home';
+import News from './pages/News';
+import Create from './pages/Create';
+import Profile from './pages/Profile';
 import { useAuth } from './hooks/useAuth';
-
-// Lazy load the other pages
-const Create = () => <div>Create Page - AI Image generation will go here</div>;
-const Profile = () => <div>Profile Page - User details will go here</div>;
 
 function App() {
   const { session, loading } = useAuth();
@@ -28,6 +27,7 @@ function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/news" element={<News />} />
           <Route path="/create" element={<Create />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<Navigate to="/" replace />} />

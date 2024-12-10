@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { AiFillHome, AiOutlineHome, AiFillPlusCircle, AiOutlinePlusCircle } from 'react-icons/ai';
-import { FaUser, FaRegUser } from 'react-icons/fa';
+import { FaUser, FaRegUser, FaNewspaper, FaRegNewspaper } from 'react-icons/fa';
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
@@ -11,6 +11,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       label: 'Home',
       IconActive: AiFillHome,
       IconInactive: AiOutlineHome,
+    },
+    {
+      path: '/news',
+      label: 'News',
+      IconActive: FaNewspaper,
+      IconInactive: FaRegNewspaper,
     },
     {
       path: '/create',

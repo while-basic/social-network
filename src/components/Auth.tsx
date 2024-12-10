@@ -20,7 +20,7 @@ const Auth = () => {
               },
             },
           }}
-          providers={['google']}
+          providers={['google', 'facebook']}
         />
       </div>
     </div>
