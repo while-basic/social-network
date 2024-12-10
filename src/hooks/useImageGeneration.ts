@@ -26,30 +26,49 @@ export function useImageGeneration() {
       return null;
     }
 
+    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+    if (!apiKey) {
+      const errorMessage = 'OpenAI API key is not configured';
+      console.error(errorMessage);
+      setError(errorMessage);
+      return null;
+    }
+
     setLoading(true);
     try {
+      console.log('Generating image with options:', { prompt, ...options });
+
       // Generate image using DALL-E 3
       const response = await fetch('https://api.openai.com/v1/images/generations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
+          'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
           model: "dall-e-3",
           prompt,
           n: 1,
           response_format: 'b64_json',
-          ...options
+          quality: options.quality,
+          style: options.style,
+          size: options.size
         })
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error?.message || 'Failed to generate image');
+        console.error('OpenAI API error:', errorData);
+        throw new Error(errorData.error?.message || `API error: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
+      if (!data.data?.[0]?.b64_json) {
+        console.error('Unexpected API response:', data);
+        throw new Error('Invalid response format from image generation API');
+      }
+
+      console.log('Image generated successfully');
       return `data:image/png;base64,${data.data[0].b64_json}`;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate image';
@@ -131,7 +150,7 @@ export function useImageGeneration() {
     setLoading(true);
     try {
       // First, ensure the user has a profile
-      const { data: _profile, error: profileError } = await supabase
+      const { error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
@@ -239,15 +258,39 @@ export function useImageGeneration() {
     caption?: string
   ): Promise<Post | null> {
     try {
+      console.log('Starting image generation process with options:', {
+        prompt,
+        quality: options.quality,
+        style: options.style,
+        size: options.size
+      });
+
       const imageDataUrl = await generateImage(prompt, options);
       if (!imageDataUrl) {
-        throw new Error('Failed to generate image');
+        const errorMessage = 'Image generation failed - no image data returned';
+        console.error(errorMessage);
+        throw new Error(errorMessage);
       }
 
-      return await saveImagePost(imageDataUrl, prompt, caption);
+      console.log('Image generated successfully, proceeding to save...');
+      const post = await saveImagePost(imageDataUrl, prompt, caption);
+      
+      if (!post) {
+        const errorMessage = 'Failed to save generated image';
+        console.error(errorMessage);
+        throw new Error(errorMessage);
+      }
+
+      console.log('Post saved successfully:', post.id);
+      return post;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to process image';
-      console.error('Process error:', err);
+      console.error('Process error:', {
+        error: err,
+        message: errorMessage,
+        prompt,
+        options
+      });
       setError(errorMessage);
       return null;
     }
